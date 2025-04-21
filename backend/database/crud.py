@@ -96,42 +96,67 @@ async def get_user_transactions(user_id: str) -> Transaction:
         transaction = await database.get_collection("transactions").find_one({"user_id": int(user_id)})
         
         if transaction:
-            # 如果找到交易記錄，返回 Transaction 物件
             return Transaction(**transaction)
         else:
-            # 如果沒有找到，返回空列表
-            return []
+            return None
     except Exception as e:
         print(f"Error getting user transactions: {e}")
-        return []
+        return None
 
 # Portfolio CRUD
 async def create_portfolio(portfolio: Portfolio) -> Portfolio:
-    portfolio_dict = portfolio.dict(by_alias=True, exclude={"id"})
-    result = await database.get_collection("portfolios").insert_one(portfolio_dict)
-    portfolio_dict["_id"] = result.inserted_id
-    return Portfolio(**portfolio_dict)
+    """
+    創建新的投資組合
+    :param portfolio: 要創建的投資組合
+    :return: 創建後的投資組合
+    """
+    try:
+        portfolio_dict = portfolio.dict(by_alias=True)
+        result = await database.get_collection("portfolios").insert_one(portfolio_dict)
+        portfolio_dict["_id"] = result.inserted_id
+        return Portfolio(**portfolio_dict)
+    except Exception as e:
+        print(f"創建投資組合時發生錯誤: {str(e)}")
+        return None
 
-async def get_user_portfolio(user_id: str) -> List[Portfolio]:
-    print(user_id)
-    portfolios = await database.get_collection("portfolios").find(
-        {"user_id": user_id}
-    ).to_list(length=None)
-    return [Portfolio(**portfolio) for portfolio in portfolios]
+async def get_user_portfolio(user_id: int) -> Optional[Portfolio]:
+    """
+    獲取用戶的投資組合
+    :param user_id: 用戶的 Discord ID
+    :return: 用戶的投資組合，如果不存在則返回 None
+    """
+    try:
+        portfolio = await database.get_collection("portfolios").find_one({"user_id": user_id})
+        if portfolio:
+            return Portfolio(**portfolio)
+        else:
+            # 如果投資組合不存在，創建一個新的
+            new_portfolio = Portfolio(user_id=user_id)
+            return await create_portfolio(new_portfolio)
+    except Exception as e:
+        print(f"獲取投資組合時發生錯誤: {str(e)}")
+        return None
 
-async def update_portfolio(portfolio_id: str, portfolio: Portfolio) -> Optional[Portfolio]:
-    portfolio_dict = portfolio.dict(by_alias=True, exclude={"id"})
-    result = await database.get_collection("portfolios").update_one(
-        {"_id": ObjectId(portfolio_id)},
-        {"$set": portfolio_dict}
-    )
-    if result.modified_count:
-        return await get_portfolio_by_id(portfolio_id)
-    return None
+async def update_portfolio(user_id: int, portfolio: Portfolio) -> Optional[Portfolio]:
+    """
+    更新用戶的投資組合
+    :param user_id: 用戶的 Discord ID
+    :param portfolio: 要更新的投資組合
+    :return: 更新後的投資組合，如果更新失敗則返回 None
+    """
+    try:
+        portfolio_dict = portfolio.dict(by_alias=True)
+        result = await database.get_collection("portfolios").update_one(
+            {"user_id": user_id},
+            {"$set": portfolio_dict}
+        )
+        if result.modified_count:
+            return await get_user_portfolio(user_id)
+        return None
+    except Exception as e:
+        print(f"更新投資組合時發生錯誤: {str(e)}")
+        return None
 
-async def get_portfolio_by_id(portfolio_id: str) -> Optional[Portfolio]:
-    portfolio = await database.get_collection("portfolios").find_one({"_id": ObjectId(portfolio_id)})
-    return Portfolio(**portfolio) if portfolio else None
 
 async def delete_portfolio(portfolio_id: str) -> bool:
     result = await database.get_collection("portfolios").delete_one({"_id": ObjectId(portfolio_id)})

@@ -1409,4 +1409,124 @@ button:hover {
 .sell {
     color: #4dff4d !important;  /* 賣出綠色 */
     font-weight: bold;
+}
+
+/* 交易記錄表格容器 */
+.transaction-history {
+    max-height: 400px;
+    overflow-y: auto;
+    position: relative;
+    background-color: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 5px;
+    margin: 0 auto;
+    width: 95%;
+}
+
+.transaction-history table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #1a1a1a;
+    table-layout: fixed;
+}
+
+.transaction-history thead {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background-color: #1a1a1a;
+    border-bottom: 2px solid #333;
+}
+
+.transaction-history th {
+    padding: 10px;
+    text-align: left;
+    color: #00fffc;
+    font-weight: bold;
+    white-space: nowrap;
+    font-size: 0.9em;
+}
+
+.transaction-history td {
+    padding: 8px;
+    border-bottom: 1px solid #333;
+    color: #fff;
+    font-size: 0.9em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* 設定每個欄位的寬度 */
+.transaction-history th:nth-child(1),
+.transaction-history td:nth-child(1) {
+    width: 20%;
+}
+
+.transaction-history th:nth-child(2),
+.transaction-history td:nth-child(2) {
+    width: 10%;
+}
+
+.transaction-history th:nth-child(3),
+.transaction-history td:nth-child(3) {
+    width: 15%;
+}
+
+.transaction-history th:nth-child(4),
+.transaction-history td:nth-child(4) {
+    width: 10%;
+}
+
+.transaction-history th:nth-child(5),
+.transaction-history td:nth-child(5) {
+    width: 10%;
+}
+
+.transaction-history th:nth-child(6),
+.transaction-history td:nth-child(6) {
+    width: 15%;
+}
+
+.transaction-history th:nth-child(7),
+.transaction-history td:nth-child(7) {
+    width: 15%;
+}
+
+.transaction-history th:nth-child(8),
+.transaction-history td:nth-child(8) {
+    width: 5%;
+}
+
+.transaction-history tr:hover {
+    background-color: #2a2a2a;
+}
+
+.transaction-history .buy {
+    color: #ff4d4d !important;
+    font-weight: bold;
+}
+
+.transaction-history .sell {
+    color: #4dff4d !important;
+    font-weight: bold;
+}
+
+/* 自定義滾動條樣式 */
+.transaction-history::-webkit-scrollbar {
+    width: 8px;
+}
+
+.transaction-history::-webkit-scrollbar-track {
+    background: #1a1a1a;
+    border-radius: 4px;
+}
+
+.transaction-history::-webkit-scrollbar-thumb {
+    background: #333;
+    border-radius: 4px;
+}
+
+.transaction-history::-webkit-scrollbar-thumb:hover {
+    background: #444;
 } 

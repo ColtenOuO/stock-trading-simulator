@@ -498,24 +498,29 @@ function closePortfolioModal() {
     portfolioModal.style.display = 'none';
 }
 
-// 切換投資組合標籤頁
+// 切換投資組合頁籤
 function switchPortfolioTab(tab) {
+    // 更新按鈕狀態
+    const buttons = document.querySelectorAll('.tab-btn');
+    buttons.forEach(button => {
+        button.classList.remove('active');
+        if (button.textContent.includes(tab === 'holdings' ? '持倉標的' : '交易歷史')) {
+            button.classList.add('active');
+        }
+    });
+
+    // 更新表格顯示
     const holdingsTable = document.getElementById('holdingsTable');
     const historyTable = document.getElementById('historyTable');
-    const buttons = document.querySelectorAll('.tab-btn');
-    
-    buttons.forEach(btn => {
-        btn.classList.remove('active');
-    });
-    
+
     if (tab === 'holdings') {
-        holdingsTable.classList.remove('hidden');
-        historyTable.classList.add('hidden');
-        document.querySelector('.tab-btn[onclick*="holdings"]').classList.add('active');
+        holdingsTable.style.display = 'table';
+        historyTable.style.display = 'none';
+        updatePortfolioDisplay(); // 更新持倉顯示
     } else {
-        holdingsTable.classList.add('hidden');
-        historyTable.classList.remove('hidden');
-        document.querySelector('.tab-btn[onclick*="history"]').classList.add('active');
+        holdingsTable.style.display = 'none';
+        historyTable.style.display = 'block';
+        updateTransactions()
     }
 }
 

@@ -111,23 +111,25 @@
                             <!-- 持倉數據由 JavaScript 動態生成 -->
                         </tbody>
                     </table>
-                    <table class="portfolio-table hidden" id="historyTable">
-                        <thead>
-                            <tr>
-                                <th>交易時間</th>
-                                <th>股票代碼</th>
-                                <th>股票名稱</th>
-                                <th>交易類型</th>
-                                <th>交易數量</th>
-                                <th>交易價格</th>
-                                <th>交易金額</th>
-                                <th>已實現損益</th>
-                            </tr>
-                        </thead>
-                        <tbody id="historyTableBody">
-                            <!-- 歷史數據由 JavaScript 動態生成 -->
-                        </tbody>
-                    </table>
+                    <div class="transaction-history" id="historyTable" style="display: none;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>時間</th>
+                                    <th>股票代碼</th>
+                                    <th>股票名稱</th>
+                                    <th>類型</th>
+                                    <th>數量</th>
+                                    <th>價格</th>
+                                    <th>總金額</th>
+                                    <th>損益</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historyTableBody">
+                                <!-- 交易記錄將在這裡動態添加 -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>

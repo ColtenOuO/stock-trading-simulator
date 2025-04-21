@@ -48,7 +48,7 @@ class User(BaseModel):
     username: str
     email: str
     avatar_url: Optional[str] = None
-    balance: float = Field(default=1000000.0)  # 預設 100 萬
+    balance: float = Field(default=100000000.0)  # 預設 100 萬
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
@@ -80,12 +80,12 @@ class Transaction(BaseModel):
     history: list[History] = Field(default_factory=list)
 
 class Portfolio(BaseModel):
-    id: Optional[PyObjectId] = Field(alias="_id", default=None)
-    user_id: PyObjectId
-    stock_id: int
-    quantity: int
-    average_cost: float
-    total_cost: float
+    class StockList(BaseModel):
+        stock_id: int
+        quantity: int
+        current_price: float
+    user_id: int #discord id
+    stock_list: list[StockList] = Field(default_factory=list)
     last_updated: datetime = Field(default_factory=datetime.utcnow)
 
 class Watchlist(BaseModel):

@@ -89,7 +89,6 @@ async def buy_stock(
             raise HTTPException(status_code=400, detail="餘額不足")
             
         try:
-                
             # 創建交易記錄
             transaction = Transaction(
                 user_id=current_user.discord_id,
@@ -118,38 +117,37 @@ async def buy_stock(
         
         try:
             # 檢查是否已有持倉
-            portfolio_list = await get_user_portfolio(str(current_user.id))
+            portfolio = await get_user_portfolio(current_user.discord_id)
+            portfolio_list = portfolio.stock_list
             logger.debug(f"獲取到的持倉列表: {portfolio_list}")
-            existing_portfolio = next((p for p in portfolio_list if str(p.stock_id) == str(stock_data['symbol'])), None)
-            logger.debug(f"現有持倉: {existing_portfolio}")
             
-            if existing_portfolio:
+            existing_stock = None
+            for data in portfolio_list:
+                if data.stock_id == stock_data['symbol']:
+                    existing_stock = data
+                    break
+            
+            logger.debug(f"現有持倉: {existing_stock}")
+            
+            if existing_stock:
                 # 更新現有持倉
-                new_quantity = existing_portfolio.quantity + quantity
-                new_total_cost = existing_portfolio.total_cost + total_amount
-                new_average_cost = new_total_cost / new_quantity
-                
-                updated_portfolio = Portfolio(
-                    id=existing_portfolio.id,
-                    user_id=ObjectId(str(current_user.id)),
-                    stock_id=stock_data.symbol,
-                    quantity=new_quantity,
-                    average_cost=new_average_cost,
-                    total_cost=new_total_cost
-                )
-                logger.debug(f"準備更新持倉: {updated_portfolio.dict()}")
-                await update_portfolio(str(existing_portfolio.id), updated_portfolio)
+                existing_stock.quantity += quantity
+                existing_stock.current_price = stock_data['current_price']
             else:
-                # 創建新持倉
-                new_portfolio = Portfolio(
-                    user_id=ObjectId(str(current_user.id)),
-                    stock_id=stock.symbol,
+                # 添加新持倉
+                portfolio_list.append(Portfolio.StockList(
+                    stock_id=stock_data['symbol'],
                     quantity=quantity,
-                    average_cost=stock.current_price,
-                    total_cost=total_amount
-                )
-                logger.debug(f"準備創建新持倉: {new_portfolio.dict()}")
-                await create_portfolio(new_portfolio)
+                    current_price=stock_data['current_price']
+                ))
+            
+            # 更新投資組合
+            updated_portfolio = Portfolio(
+                user_id=current_user.discord_id,
+                stock_list=portfolio_list
+            )
+            logger.debug(f"準備更新持倉: {updated_portfolio.dict()}")
+            await update_portfolio(current_user.discord_id, updated_portfolio)
         except Exception as e:
             logger.error(f"處理持倉時出錯: {str(e)}")
             raise
@@ -178,60 +176,92 @@ async def sell_stock(
     try:
         # 驗證用戶
         current_user = await verify_and_get_user(token)
+        logger.debug(f"開始處理賣出請求: symbol={symbol}, quantity={quantity}")
+        logger.debug(f"當前用戶: id={current_user.discord_id}, balance={current_user.balance}")
 
-        # 檢查股票是否存在
-        stock = await get_stock_by_symbol(symbol)
-        if not stock:
-            raise HTTPException(status_code=404, detail="股票不存在")
-            
-        # 檢查用戶持倉
-        portfolio_list = await get_user_portfolio(str(current_user.id))
-        existing_portfolio = next((p for p in portfolio_list if str(p.stock_id) == str(stock.symbol)), None)
-        if not existing_portfolio or existing_portfolio.quantity < quantity:
-            raise HTTPException(status_code=400, detail="持倉不足")
-            
+        # 先從 TWSE 獲取最新股票資料
+        stock_data = await twse.get_stock_price(symbol)
+        if not stock_data:
+            raise HTTPException(status_code=404, detail="無法獲取股票資訊")
+
         # 計算交易總額
-        total_amount = stock.current_price * quantity
+        total_amount = stock_data['current_price'] * quantity
+        logger.debug(f"交易總額: {total_amount}")
             
+        try:
+            # 檢查是否已有持倉
+            portfolio = await get_user_portfolio(current_user.discord_id)
+            portfolio_list = portfolio.stock_list
+            logger.debug(f"獲取到的持倉列表: {portfolio_list}")
+            
+            existing_stock = None
+            for data in portfolio_list:
+                if data.stock_id == stock_data['symbol']:
+                    existing_stock = data
+                    break
+            
+            logger.debug(f"現有持倉: {existing_stock}")
+            
+            if not existing_stock or existing_stock.quantity < quantity:
+                raise HTTPException(status_code=400, detail="持倉不足")
+            
+            # 更新持倉
+            existing_stock.quantity -= quantity
+            existing_stock.current_price = stock_data['current_price']
+            
+            # 如果數量為 0，從列表中移除
+            if existing_stock.quantity <= 0:
+                portfolio_list = [stock for stock in portfolio_list if stock.stock_id != stock_data['symbol']]
+            
+            # 更新投資組合
+            updated_portfolio = Portfolio(
+                user_id=current_user.discord_id,
+                stock_list=portfolio_list
+            )
+            logger.debug(f"準備更新持倉: {updated_portfolio.dict()}")
+            await update_portfolio(current_user.discord_id, updated_portfolio)
+        except Exception as e:
+            logger.error(f"處理持倉時出錯: {str(e)}")
+            raise
+        
         try:
             # 創建交易記錄
             transaction = Transaction(
-                user_id=ObjectId(str(current_user.id)),
-                stock_id=stock.symbol,
+                user_id=current_user.discord_id,
+                stock_id=stock_data['symbol'],
                 type="sell",
                 quantity=quantity,
-                price=stock.current_price,
-                total_amount=total_amount
+                price=stock_data['current_price'],
+                total_amount=total_amount,
+                history=[
+                    {
+                        "stock_id": stock_data['symbol'],
+                        "type": "sell",
+                        "quantity": quantity,
+                        "price": stock_data['current_price'],
+                        "total_amount": total_amount,
+                        "timestamp": datetime.utcnow()
+                    }
+                ]
             )
+            logger.debug(f"準備創建交易記錄: {transaction.dict()}")
             transaction = await create_transaction(transaction)
-            
-            # 更新持倉
-            new_quantity = existing_portfolio.quantity - quantity
-            if new_quantity > 0:
-                # 更新現有持倉
-                updated_portfolio = Portfolio(
-                    id=existing_portfolio.id,
-                    user_id=ObjectId(str(current_user.id)),
-                    stock_id=stock.symbol,
-                    quantity=new_quantity,
-                    average_cost=existing_portfolio.average_cost,
-                    total_cost=existing_portfolio.average_cost * new_quantity
-                )
-                await update_portfolio(str(existing_portfolio.id), updated_portfolio)
-            else:
-                # 刪除持倉
-                await delete_portfolio(str(existing_portfolio.id))
-            
+            logger.debug(f"交易記錄創建成功: {transaction}")
+        except Exception as e:
+            logger.error(f"創建交易記錄時出錯: {str(e)}")
+            raise
+        
+        try:
             # 更新用戶餘額
             current_user.balance += total_amount
+            logger.debug(f"準備更新用戶餘額: {current_user.balance}")
             await update_user(str(current_user.id), current_user)
-            
-            return {"message": "賣出成功", "transaction": transaction}
-            
         except Exception as e:
-            logger.error(f"處理賣出時出錯: {str(e)}")
-            raise HTTPException(status_code=500, detail=str(e))
-            
+            logger.error(f"更新用戶餘額時出錯: {str(e)}")
+            raise
+        
+        return {"message": "賣出成功", "transaction": transaction}
+        
     except Exception as e:
         logger.error(f"賣出處理過程中出錯: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))

@@ -1,0 +1,72 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+.env
+venv/
+ENV/
+env/
+
+# Node.js
+node_modules/
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+.pnpm-debug.log
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# 專案特定
+*.log
+.coverage
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+stock-trading-simulator/backend/config.py
+stock-trading-simulator/backend/uploads/
+stock-trading-simulator/backend/__pycache__/
+stock-trading-simulator/frontend/node_modules/
+
+# 資料庫
+*.sqlite
+*.sqlite3
+*.db
+
+# 配置文件（如果包含敏感信息）
+config.ini
+secrets.json
+credentials.json
+
+# 快取
+.cache/
+.temp/
+.tmp/
+

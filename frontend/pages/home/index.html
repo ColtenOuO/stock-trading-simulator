@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>股票交易模擬器</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="home.css">
+    <script src="https://kit.fontawesome.com/your-font-awesome-kit.js" crossorigin="anonymous"></script>
+</head>
+<body>
+    <div class="landing-container">
+        <div class="stars"></div>
+        <div class="twinkling"></div>
+        <div class="meteor-shower">
+            <div class="meteor"></div>
+            <div class="meteor"></div>
+            <div class="meteor"></div>
+            <div class="meteor"></div>
+            <div class="meteor"></div>
+            <div class="meteor"></div>
+        </div>
+        <div class="landing-content">
+            <h1 class="main-title">股票交易模擬器</h1>
+            <h2 class="sub-title">體驗真實市場，零風險交易</h2>
+            <div class="feature-list">
+                <p>✨ 即時股票行情</p>
+                <p>💰 模擬交易體驗</p>
+                <p>📊 專業技術分析</p>
+                <p>🔒 安全可靠系統</p>
+            </div>
+            <div class="auth-buttons">
+                <a href="http://localhost:5001/api/auth/discord/login" class="discord-btn">
+                    <i class="fab fa-discord"></i>
+                    使用 Discord 登入
+                </a>
+                <button class="guest-btn" onclick="enterAsGuest()">
+                    <i class="fas fa-user"></i>
+                    訪客模式
+                </button>
+            </div>
+        </div>
+    </div>
+    <script>
+        // 檢查是否已經登入
+        function checkLoginStatus() {
+            const token = localStorage.getItem('userToken');
+            if (token) {
+                window.location.href = '../trading/trading.html';
+            }
+        }
+
+        // 以訪客身份進入
+        function enterAsGuest() {
+            window.location.href = '../trading/trading.html';
+        }
+
+        // 頁面載入時檢查登入狀態
+        document.addEventListener('DOMContentLoaded', function() {
+            // 檢查 URL 中是否有 token
+            const urlParams = new URLSearchParams(window.location.search);
+            const token = urlParams.get('token');
+            
+            if (token) {
+                localStorage.setItem('userToken', token);
+                window.location.href = '../trading/trading.html';
+            } else {
+                checkLoginStatus();
+            }
+        });
+    </script>
+</body>
+</html> 

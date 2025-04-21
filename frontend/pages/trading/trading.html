@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>股票交易 - 模擬器</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="trading.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="trading.js"></script>
+</head>
+<body>
+    <!-- 導航欄 -->
+    <nav class="navbar">
+        <div class="nav-brand">股票交易模擬器</div>
+        <div class="nav-search">
+            <input id="search_id" type="text" placeholder="搜尋股票...">
+            <button onclick="searchStock()" id="search_button">搜尋</button>
+        </div>
+        <div class="nav-links">
+            <a href="#" class="active">交易大廳</a>
+            <a href="#" onclick="showPortfolio()">我的投資組合</a>
+            <div class="user-info">
+                <img id="userAvatar" class="user-avatar" src="" alt="avatar">
+                <span id="username">載入中...</span>
+            </div>
+            <div class="balance-info">
+                <i class="fas fa-wallet"></i>
+                <span id="userBalance">$1,000,000</span>
+            </div>
+            <a href="#" onclick="logout()">登出</a>
+        </div>
+    </nav>
+
+    <!-- 主要內容 -->
+    <main class="main-content">
+        <div class="stock-list">
+            <!-- 股票卡片由 JavaScript 動態生成 -->
+        </div>
+    </main>
+
+    <!-- 交易模態框 -->
+    <div id="tradeModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2 class="modal-title"></h2>
+            <div class="modal-body">
+                <div class="trade-input">
+                    <label for="quantity">數量：</label>
+                    <input type="number" id="quantity" min="1" step="1">
+                </div>
+                <div class="total-amount">
+                    總金額：<span id="totalAmount">$0.00</span>
+                </div>
+                <button class="confirm-btn">確認交易</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 詳細資料模態框 -->
+    <div id="detailModal" class="modal">
+        <div class="modal-content detail-modal-content">
+            <!-- 內容由 JavaScript 動態生成 -->
+        </div>
+    </div>
+
+    <!-- 投資組合模態框 -->
+    <div id="portfolioModal" class="modal">
+        <div class="modal-content portfolio-modal-content">
+            <span class="close" onclick="closePortfolioModal()">&times;</span>
+            <div class="portfolio-header">
+                <h2>我的投資組合</h2>
+                <div class="portfolio-summary">
+                    <div class="summary-item">
+                        <span class="label">總資產</span>
+                        <span class="value" id="totalAssets">計算中...</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="label">持倉市值</span>
+                        <span class="value" id="holdingValue">計算中...</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="label">現金餘額</span>
+                        <span class="value" id="cashBalance">計算中...</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="label">總收益</span>
+                        <span class="value" id="totalProfit">計算中...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="portfolio-content">
+                <div class="portfolio-tabs">
+                    <button class="tab-btn active" onclick="switchPortfolioTab('holdings')">持倉標的</button>
+                    <button class="tab-btn" onclick="switchPortfolioTab('history')">交易歷史</button>
+                </div>
+                <div class="portfolio-table-container">
+                    <table class="portfolio-table" id="holdingsTable">
+                        <thead>
+                            <tr>
+                                <th>股票代碼</th>
+                                <th>股票名稱</th>
+                                <th>持有數量</th>
+                                <th>現價</th>
+                                <th>市值</th>
+                                <th>損益比例</th>
+                            </tr>
+                        </thead>
+                        <tbody id="holdingsTableBody">
+                            <!-- 持倉數據由 JavaScript 動態生成 -->
+                        </tbody>
+                    </table>
+                    <table class="portfolio-table hidden" id="historyTable">
+                        <thead>
+                            <tr>
+                                <th>交易時間</th>
+                                <th>股票代碼</th>
+                                <th>股票名稱</th>
+                                <th>交易類型</th>
+                                <th>交易數量</th>
+                                <th>交易價格</th>
+                                <th>交易金額</th>
+                                <th>已實現損益</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTableBody">
+                            <!-- 歷史數據由 JavaScript 動態生成 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html> 

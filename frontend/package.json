@@ -1,0 +1,12 @@
+{
+  "name": "stock-trading-simulator-frontend",
+  "version": "1.0.0",
+  "description": "股票交易模擬系統前端",
+  "scripts": {
+    "start": "live-server",
+    "build": "echo 'No build step required for this project'"
+  },
+  "devDependencies": {
+    "live-server": "^1.2.2"
+  }
+} 

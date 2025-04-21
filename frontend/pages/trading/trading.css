@@ -1399,4 +1399,14 @@ button:hover {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     animation: slideIn 0.3s ease-out;
     z-index: 1000;
+}
+
+.buy {
+    color: #ff4d4d !important;  /* 買入紅色 */
+    font-weight: bold;
+}
+
+.sell {
+    color: #4dff4d !important;  /* 賣出綠色 */
+    font-weight: bold;
 } 

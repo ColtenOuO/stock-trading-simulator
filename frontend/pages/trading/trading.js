@@ -738,35 +738,87 @@ function updatePortfolioDisplay(portfolio) {
 }
 
 // 更新交易記錄顯示
-function updateTransactionsDisplay(transactions) {
+async function updateTransactionsDisplay(transactions) {
     const historyTableBody = document.getElementById('historyTableBody');
     historyTableBody.innerHTML = '';
     
+    console.log('開始更新交易記錄顯示:', transactions);
+    
+    // 檢查是否有交易記錄
+    if (!transactions || !transactions.history) {
+        console.log('沒有交易記錄');
+        return;
+    }
 
-    // 獲取第一個交易記錄的 history
+    // 獲取交易歷史
     const transactionHistory = transactions.history;
+    console.log('交易歷史:', transactionHistory);
+    
+    if (!transactionHistory || transactionHistory.length === 0) {
+        console.log('沒有交易歷史');
+        return;
+    }
     
     // 按時間戳排序（從新到舊）
     transactionHistory.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
     
-    transactionHistory.forEach(record => {
+    for (const record of transactionHistory) {
+        console.log('處理交易記錄:', record);
         const row = document.createElement('tr');
         const type = record.type === 'buy' ? '買入' : '賣出';
         const quantity = parseInt(record.quantity || 0);
         const price = parseFloat(record.price || 0);
         const total = parseFloat(record.total_amount || 0);
         
-        row.innerHTML = `
-            <td>${new Date(record.timestamp).toLocaleString()}</td>
-            <td>${record.stock_id}</td>
-            <td>${record.stock_name || '未知'}</td>
-            <td class="${type === '買入' ? 'buy' : 'sell'}">${type}</td>
-            <td>${quantity.toLocaleString()}</td>
-            <td>$${price.toFixed(2)}</td>
-            <td>$${total.toFixed(2)}</td>
-            <td>--</td>
-        `;
+        // 將 UTC 時間轉換為 UTC+8
+        const utcDate = new Date(record.timestamp);
+        const taipeiDate = new Date(utcDate.getTime() + (8 * 60 * 60 * 1000));
+        
+        // 確保 stock_id 是字串並格式化
+        const stockId = String(record.stock_id || '').padStart(4, '0');
+        
+        try {
+            const response = await fetch(`http://localhost:5001/api/stock/${stockId}`);
+            if (response.ok) {
+                const stock_data = await response.json();
+                const stock_name = stock_data.name;
+                row.innerHTML = `
+                    <td>${taipeiDate.toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' })}</td>
+                    <td>${stockId}</td>
+                    <td>${stock_name || '未知'}</td>
+                    <td class="${record.type}">${type}</td>
+                    <td>${quantity.toLocaleString()}</td>
+                    <td>$${price.toFixed(2)}</td>
+                    <td>$${total.toFixed(2)}</td>
+                    <td>--</td>
+                `;
+            } else {
+                console.error('獲取股票資料失敗:', response.status);
+                row.innerHTML = `
+                    <td>${taipeiDate.toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' })}</td>
+                    <td>${stockId}</td>
+                    <td>未知</td>
+                    <td class="${record.type}">${type}</td>
+                    <td>${quantity.toLocaleString()}</td>
+                    <td>$${price.toFixed(2)}</td>
+                    <td>$${total.toFixed(2)}</td>
+                    <td>--</td>
+                `;
+            }
+        } catch (error) {
+            console.error('獲取股票資料時發生錯誤:', error);
+            row.innerHTML = `
+                <td>${taipeiDate.toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' })}</td>
+                <td>${stockId}</td>
+                <td>未知</td>
+                <td class="${record.type}">${type}</td>
+                <td>${quantity.toLocaleString()}</td>
+                <td>$${price.toFixed(2)}</td>
+                <td>$${total.toFixed(2)}</td>
+                <td>--</td>
+            `;
+        }
         
         historyTableBody.appendChild(row);
-    });
+    }
 } 

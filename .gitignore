@@ -50,10 +50,10 @@ Thumbs.db
 htmlcov/
 .pytest_cache/
 .mypy_cache/
-stock-trading-simulator/backend/config.py
-stock-trading-simulator/backend/uploads/
-stock-trading-simulator/backend/__pycache__/
-stock-trading-simulator/frontend/node_modules/
+backend/config.py
+backend/uploads/
+backend/__pycache__/
+frontend/node_modules/
 
 # 資料庫
 *.sqlite

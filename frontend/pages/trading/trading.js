@@ -516,7 +516,7 @@ function switchPortfolioTab(tab) {
     if (tab === 'holdings') {
         holdingsTable.style.display = 'table';
         historyTable.style.display = 'none';
-        updatePortfolioDisplay(); // 更新持倉顯示
+        updatePortfolio(); // 更新持倉顯示
     } else {
         holdingsTable.style.display = 'none';
         historyTable.style.display = 'block';
@@ -701,45 +701,103 @@ async function updateTransactions() {
 }
 
 // 更新持倉顯示
-function updatePortfolioDisplay(portfolio) {
+async function updatePortfolioDisplay(portfolio) {
     const holdingsTableBody = document.getElementById('holdingsTableBody');
     holdingsTableBody.innerHTML = '';
     
-    let totalValue = 0;
-    let totalCost = 0;
+    console.log('更新持倉顯示:', portfolio);
     
-    portfolio.forEach(item => {
+    if (!portfolio || !portfolio.stock_list || portfolio.stock_list.length === 0) {
         const row = document.createElement('tr');
-        const currentPrice = parseFloat(item.current_price || 0);
-        const quantity = parseInt(item.quantity || 0);
-        const cost = parseFloat(item.average_cost || 0);
-        const value = currentPrice * quantity;
-        const profit = value - (cost * quantity);
-        const profitPercentage = cost > 0 ? (profit / (cost * quantity)) * 100 : 0;
-        
-        totalValue += value;
-        totalCost += cost * quantity;
-        
         row.innerHTML = `
-            <td>${item.stock_id}</td>
-            <td>${item.stock_name || '未知'}</td>
-            <td>${quantity.toLocaleString()}</td>
-            <td>$${currentPrice.toFixed(2)}</td>
-            <td>$${value.toFixed(2)}</td>
-            <td class="${profit >= 0 ? 'positive' : 'negative'}">${profitPercentage.toFixed(2)}%</td>
+            <td colspan="6" style="text-align: center;">暫無持倉</td>
         `;
-        
         holdingsTableBody.appendChild(row);
-    });
+        
+        // 更新總計
+        document.getElementById('totalAssets').textContent = '$0.00';
+        document.getElementById('holdingValue').textContent = '$0.00';
+        document.getElementById('totalProfit').textContent = '0.00%';
+        return;
+    }
+    
+    let totalValue = 0;
+    
+    for (const item of portfolio.stock_list) {
+        try {
+            // 獲取最新股票資訊
+            const response = await fetch(`http://localhost:5001/api/stock/${item.stock_id}`);
+            if (!response.ok) {
+                console.error('獲取股票資訊失敗:', response.status);
+                continue;
+            }
+            
+            const stockData = await response.json();
+            const row = document.createElement('tr');
+            
+            const currentPrice = parseFloat(stockData.current_price || 0);
+            const quantity = parseInt(item.quantity || 0);
+            const totalPrice = parseFloat(item.total_price || 0);
+            const averagePrice = totalPrice / quantity;
+            const marketValue = currentPrice * quantity;
+            const profit = marketValue - totalPrice;
+            const profitPercentage = (profit / totalPrice) * 100;
+            
+            totalValue += marketValue;
+            
+            row.innerHTML = `
+                <td>${item.stock_id}</td>
+                <td>${stockData.name || '未知'}</td>
+                <td>${quantity.toLocaleString('zh-TW')}</td>
+                <td>${currentPrice.toLocaleString('zh-TW', {
+                    style: 'currency',
+                    currency: 'TWD',
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                })}</td>
+                <td>${marketValue.toLocaleString('zh-TW', {
+                    style: 'currency',
+                    currency: 'TWD',
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                })}</td>
+                <td class="${profit >= 0 ? 'positive' : 'negative'}">${profitPercentage.toFixed(2)}%</td>
+            `;
+            
+            holdingsTableBody.appendChild(row);
+            
+        } catch (error) {
+            console.error('處理股票資訊時發生錯誤:', error);
+        }
+    }
     
     // 更新總計
-    const totalProfit = totalValue - totalCost;
-    const totalProfitPercentage = totalCost > 0 ? (totalProfit / totalCost) * 100 : 0;
+    const userBalance = parseFloat(document.getElementById('userBalance').textContent.replace(/[^0-9.-]+/g, ''));
+    const totalAssets = totalValue + userBalance;
     
-    document.getElementById('totalAssets').textContent = `$${totalValue.toFixed(2)}`;
-    document.getElementById('holdingValue').textContent = `$${totalValue.toFixed(2)}`;
-    document.getElementById('cashBalance').textContent = `$${parseFloat(document.getElementById('userBalance').textContent.replace('$', '')).toFixed(2)}`;
-    document.getElementById('totalProfit').textContent = `${totalProfitPercentage.toFixed(2)}%`;
+    document.getElementById('totalAssets').textContent = totalAssets.toLocaleString('zh-TW', {
+        style: 'currency',
+        currency: 'TWD',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+    document.getElementById('holdingValue').textContent = totalValue.toLocaleString('zh-TW', {
+        style: 'currency',
+        currency: 'TWD',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+    document.getElementById('cashBalance').textContent = userBalance.toLocaleString('zh-TW', {
+        style: 'currency',
+        currency: 'TWD',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+    
+    // 計算總收益率
+    const initialBalance = 1000000000; // 初始資金 10 億
+    const totalProfit = ((totalAssets - initialBalance) / initialBalance) * 100;
+    document.getElementById('totalProfit').textContent = `${totalProfit.toFixed(2)}%`;
 }
 
 // 更新交易記錄顯示

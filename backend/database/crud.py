@@ -144,6 +144,8 @@ async def update_portfolio(user_id: int, portfolio: Portfolio) -> Optional[Portf
     :param portfolio: 要更新的投資組合
     :return: 更新後的投資組合，如果更新失敗則返回 None
     """
+    print("user_id", user_id)
+    print("portfolio", portfolio)
     try:
         portfolio_dict = portfolio.dict(by_alias=True)
         result = await database.get_collection("portfolios").update_one(

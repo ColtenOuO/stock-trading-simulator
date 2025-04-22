@@ -132,13 +132,13 @@ async def buy_stock(
             if existing_stock:
                 # 更新現有持倉
                 existing_stock.quantity += quantity
-                existing_stock.current_price = stock_data['current_price']
+                existing_stock.total_price += stock_data['current_price'] * quantity
             else:
                 # 添加新持倉
                 portfolio_list.append(Portfolio.StockList(
                     stock_id=stock_data['symbol'],
                     quantity=quantity,
-                    current_price=stock_data['current_price']
+                    total_price=stock_data['current_price'] * quantity
                 ))
             
             # 更新投資組合
@@ -281,7 +281,9 @@ async def get_portfolio(token: str = Query(..., description="用戶 token")):
     try:
         # 驗證用戶
         current_user = await verify_and_get_user(token)
-        portfolio = await get_user_portfolio(str(current_user.id))
+        logger.debug(f"獲取投資組合: user_id={current_user.discord_id}")
+        portfolio = await get_user_portfolio(current_user.discord_id)
         return {"portfolio": portfolio}
     except Exception as e:
+        logger.error(f"獲取投資組合時發生錯誤: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e)) 

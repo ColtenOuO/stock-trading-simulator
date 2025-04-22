@@ -81,10 +81,11 @@ class Transaction(BaseModel):
 
 class Portfolio(BaseModel):
     class StockList(BaseModel):
-        stock_id: int
+        stock_id: str
         quantity: int
-        current_price: float
-    user_id: int #discord id
+        total_price: float
+        
+    user_id: str
     stock_list: list[StockList] = Field(default_factory=list)
     last_updated: datetime = Field(default_factory=datetime.utcnow)
 
